@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use std::mem::size_of;
+use std::env;
+use std::fs;
+use rustyline::Editor;
 
 type Cell = u8;
 const ARRAY_SIZE: usize = 30000;
@@ -92,6 +95,29 @@ impl Interpreter {
 
 fn main() {
     let mut itp = Interpreter::new();
-    itp.exec(",.").unwrap();
+    let args: Vec<String> = env::args().collect();
+    if args.len() <= 1 {
+        let mut rl = Editor::<()>::new();
+        loop {
+            let readline = rl.readline("> ");
+            match readline {
+                Ok(line) => {
+                    print!("< ");
+                    match itp.exec(&line) {
+                        Ok(_) => println!(),
+                        Err(e) => println!("{}", e)
+                    }
+                },
+                Err(_) => break
+            }
+        }
+    } else {
+        let filepath = args.get(1).unwrap();
+        let code = fs::read_to_string(filepath).expect("can't read from file");
+        match itp.exec(&code) {
+            Ok(_) => {},
+            Err(e) => println!("{}", e)
+        }
+    }
     println!();
 }
