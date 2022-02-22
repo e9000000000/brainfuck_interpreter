@@ -52,9 +52,9 @@ impl Interpreter {
             match c {
                 '+' => self.array[self.current] = value.wrapping_add(1),
                 '-' => self.array[self.current] = value.wrapping_sub(1),
-                '>' if self.current >= ARRAY_SIZE + 1 => return Err(format!("array end reached\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
+                '>' if self.current >= ARRAY_SIZE + 1 => return Err(format!("array end reached\ncell_index={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '>' => self.current += 1,
-                '<' if self.current == 0 => return Err(format!("array begin reached\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
+                '<' if self.current == 0 => return Err(format!("array begin reached\ncell_index={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '<' => self.current -= 1,
                 '.' => {
                     print!("{}", self.array[self.current] as char);
@@ -93,7 +93,7 @@ impl Interpreter {
 
 fn get_line_char(code: &str, i: usize) -> Option<(usize, usize)> {
     let mut line = 1;
-    let mut chr = 1;
+    let mut chr = 0;
     for j in 0..=i {
         let c = match code.chars().nth(j){
             Some(v) => v,
@@ -101,7 +101,7 @@ fn get_line_char(code: &str, i: usize) -> Option<(usize, usize)> {
         };
         if c == '\n' {
             line += 1;
-            chr = 1;
+            chr = 0;
         } else {
             chr += 1;
         }
@@ -128,7 +128,7 @@ fn main() {
         }
     } else {
         let filepath = args.get(1).unwrap();
-        let code = fs::read_to_string(filepath).expect("can't read from file");
+        let code = fs::read_to_string(filepath).expect("can't read file");
         match itp.exec(&code) {
             Ok(_) => {},
             Err(e) => println!("{}", e)

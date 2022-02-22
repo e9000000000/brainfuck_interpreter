@@ -5,6 +5,7 @@
 ```bash
 cargo build --release
 mv target/release/bf .
+strip bf
 ```
 
 ## usage

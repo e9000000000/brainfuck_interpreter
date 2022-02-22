@@ -1,3 +1,9 @@
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = 'abort'
+
 [package]
 name = "bf"
 version = "0.2.0"
