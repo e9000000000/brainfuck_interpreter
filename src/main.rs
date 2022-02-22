@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io;
+use std::mem::size_of;
 
 type Cell = u8;
 const ARRAY_SIZE: usize = 30000;
@@ -60,7 +61,14 @@ impl Interpreter {
                         Ok(_) => {},
                         Err(e) => return Err(format!("can't read from stdio error={:?}", e))
                     }
-                    // TODO: make it write byte from input to current
+                    self.array[self.current] = Cell::MIN;
+                    let bytes = inp.as_bytes();
+                    for i in 0..size_of::<Cell>() {
+                        if let Some(byte) = bytes.get(i) {
+                            self.array[self.current] = self.array[self.current].wrapping_shl(8);
+                            self.array[self.current] += *byte as Cell;
+                        }
+                    }
                 },
                 '['  => {
                     if self.array[self.current] == 0 {
@@ -85,6 +93,6 @@ impl Interpreter {
 
 fn main() {
     let mut itp = Interpreter::new();
-    itp.exec("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.[.].");
+    itp.exec(",.").unwrap();
     println!();
 }
