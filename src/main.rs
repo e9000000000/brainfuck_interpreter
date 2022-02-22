@@ -48,13 +48,13 @@ impl Interpreter {
             let c = code.chars().nth(i).unwrap();
             let value = self.array[self.current];
             match c {
-                '+' if value == Cell::MAX => return Err(format!("buffer overflow\ncell={}\nchar={}", self.current, i)),
+                '+' if value == Cell::MAX => return Err(format!("buffer overflow\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '+' => self.array[self.current] += 1,
-                '-' if value == Cell::MIN => return Err(format!("buffer underflow\ncell={}\nchar={}", self.current, i)),
+                '-' if value == Cell::MIN => return Err(format!("buffer underflow\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '-' => self.array[self.current] -= 1,
-                '>' if self.current >= ARRAY_SIZE + 1 => return Err(format!("array end reached\ncell={}\nchar={}", self.current, i)),
+                '>' if self.current >= ARRAY_SIZE + 1 => return Err(format!("array end reached\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '>' => self.current += 1,
-                '<' if self.current == 0 => return Err(format!("array begin reached\ncell={}\nchar={}", self.current, i)),
+                '<' if self.current == 0 => return Err(format!("array begin reached\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '<' => self.current -= 1,
                 '.' => print!("{}", self.array[self.current] as char),
                 ',' => {
@@ -92,6 +92,23 @@ impl Interpreter {
     }
 }
 
+fn get_line_char(code: &str, i: usize) -> Option<(usize, usize)> {
+    let mut line = 1;
+    let mut chr = 1;
+    for j in 0..=i {
+        let c = match code.chars().nth(j){
+            Some(v) => v,
+            None => return None
+        };
+        if c == '\n' {
+            line += 1;
+            chr = 1;
+        } else {
+            chr += 1;
+        }
+    }
+    Some((line, chr))
+}
 
 fn main() {
     let mut itp = Interpreter::new();

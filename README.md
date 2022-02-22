@@ -4,7 +4,7 @@
 ## build
 ```bash
 cargo build --release
-mv target/release/bf_interpreter ./bf
+mv target/release/bf .
 ```
 
 ## usage
