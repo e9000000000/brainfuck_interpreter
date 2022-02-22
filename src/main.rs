@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::io;
 use std::mem::size_of;
 
 type Cell = u8;
