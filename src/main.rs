@@ -1,7 +1,9 @@
 use std::collections::HashMap;
-use std::mem::size_of;
 use std::env;
 use std::fs;
+use std::io::Read;
+use std::io::Write;
+use termios::{Termios, TCSANOW, ICANON, tcsetattr};
 use rustyline::Editor;
 
 type Cell = u8;
@@ -48,29 +50,26 @@ impl Interpreter {
             let c = code.chars().nth(i).unwrap();
             let value = self.array[self.current];
             match c {
-                '+' if value == Cell::MAX => return Err(format!("buffer overflow\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
-                '+' => self.array[self.current] += 1,
-                '-' if value == Cell::MIN => return Err(format!("buffer underflow\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
-                '-' => self.array[self.current] -= 1,
+                '+' => self.array[self.current] = value.wrapping_add(1),
+                '-' => self.array[self.current] = value.wrapping_sub(1),
                 '>' if self.current >= ARRAY_SIZE + 1 => return Err(format!("array end reached\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '>' => self.current += 1,
                 '<' if self.current == 0 => return Err(format!("array begin reached\ncell={}\nline/char={:?}", self.current, get_line_char(code, i))),
                 '<' => self.current -= 1,
-                '.' => print!("{}", self.array[self.current] as char),
+                '.' => {
+                    print!("{}", self.array[self.current] as char);
+                    std::io::stdout().flush().unwrap();
+                },
                 ',' => {
-                    let mut inp = String::new();
-                    match std::io::stdin().read_line(&mut inp) {
-                        Ok(_) => {},
-                        Err(e) => return Err(format!("can't read from stdio error={:?}", e))
-                    }
-                    self.array[self.current] = Cell::MIN;
-                    let bytes = inp.as_bytes();
-                    for i in 0..size_of::<Cell>() {
-                        if let Some(byte) = bytes.get(i) {
-                            self.array[self.current] = self.array[self.current].wrapping_shl(8);
-                            self.array[self.current] += *byte as Cell;
-                        }
-                    }
+                    let mut inp: [u8; 1] = [0];
+                    let mut stdin = std::io::stdin();
+                    let old_termios = Termios::from_fd(0).unwrap();
+                    let mut termios = old_termios.clone();
+                    termios.c_lflag &= !(ICANON);
+                    tcsetattr(0, TCSANOW, &mut termios).unwrap();
+                    stdin.read(&mut inp).unwrap();
+                    self.array[self.current] = inp[0];
+                    tcsetattr(0, TCSANOW, & old_termios).unwrap();
                 },
                 '['  => {
                     if self.array[self.current] == 0 {
@@ -119,7 +118,6 @@ fn main() {
             let readline = rl.readline("> ");
             match readline {
                 Ok(line) => {
-                    print!("< ");
                     match itp.exec(&line) {
                         Ok(_) => println!(),
                         Err(e) => println!("{}", e)
