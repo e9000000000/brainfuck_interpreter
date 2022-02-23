@@ -33,7 +33,7 @@ impl Interpreter {
                 ']' => {
                     let open_i = match stack.pop(){
                         Some(value) => value,
-                        None => return Err(format!("close brackets without open one\nchar={}", i))
+                        None => return Err(format!("close brackets without open one\nline/char={:?}", get_line_char(code, i).unwrap()))
                     };
                     brackets.insert(open_i, i);
                     brackets.insert(i, open_i);
@@ -52,9 +52,9 @@ impl Interpreter {
             match c {
                 '+' => self.array[self.current] = value.wrapping_add(1),
                 '-' => self.array[self.current] = value.wrapping_sub(1),
-                '>' if self.current >= ARRAY_SIZE - 1 => return Err(format!("array end reached\ncell_index={}\nline/char={:?}", self.current, get_line_char(code, i))),
+                '>' if self.current >= ARRAY_SIZE - 1 => return Err(format!("array end reached\ncell_index={}\nline/char={:?}", self.current, get_line_char(code, i).unwrap())),
                 '>' => self.current += 1,
-                '<' if self.current == 0 => return Err(format!("array begin reached\ncell_index={}\nline/char={:?}", self.current, get_line_char(code, i))),
+                '<' if self.current == 0 => return Err(format!("array begin reached\ncell_index={}\nline/char={:?}", self.current, get_line_char(code, i).unwrap())),
                 '<' => self.current -= 1,
                 '.' => {
                     print!("{}", self.array[self.current] as char);
